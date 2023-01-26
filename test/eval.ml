@@ -130,6 +130,31 @@ let test_env () =
     table
 ;;
 
+let test_var () =
+  let open Syntax in
+  let open Eval in
+  let env = emptyenv () in
+  let env = ext env "a" (BoolVal false) in
+  let env = ext env "x" (IntVal 1) in
+  let env = ext env "y" (BoolVal true) in
+  let env = ext env "a" (IntVal 100) in
+  let table =
+    [ "x", IntVal 1
+    ; "y", BoolVal true
+    ; "a", IntVal 100
+    ] [@ocamlformat "disable"]
+  in
+  List.iter
+    (fun (exp, want) -> Alcotest.(check value_testable) exp want (eval (parse exp) env))
+    table;
+  Alcotest.check_raises
+    "not exist variable"
+    (Stdlib.Failure "lookup failed with key: none")
+    (fun () ->
+      let _ = eval (parse "none") env in
+      ())
+;;
+
 let test_let () =
   let open Syntax in
   let open Eval in
@@ -236,7 +261,8 @@ let () =
   Alcotest.run
     "Eval"
     [ ( "eval"
-      , [ Alcotest.test_case "plus" `Quick test_plus
+      , [ Alcotest.test_case "var" `Quick test_var
+        ; Alcotest.test_case "plus" `Quick test_plus
         ; Alcotest.test_case "times" `Quick test_times
         ; Alcotest.test_case "math" `Quick test_math
         ; Alcotest.test_case "eq" `Quick test_eq

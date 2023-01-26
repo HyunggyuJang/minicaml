@@ -81,7 +81,7 @@ open Parser.Syntax
 
 type 'a parser = 'a Parser.m
 
-(* ordered choice: e1 / e2 *)
+(* ordered choice: e1 | e2 *)
 let ( <|> ) = Parser.either
 let empty _ = Parser.empty ()
 
@@ -96,7 +96,7 @@ let option default p = p <|> pure default
 (* optional: e? *)
 let optional p = option None (p >>= fun x -> pure @@ Some x)
 
-(* and-predicate:  &e *)
+(* and-predicate (Lookahead):  &e *)
 let andP (p : 'a parser) : unit parser =
   let* s = Parser.get () in
   let* pos = Parser.getPos () in
@@ -106,7 +106,7 @@ let andP (p : 'a parser) : unit parser =
     (fun _ -> ParseResult.throwError @@ ParseError.make "andP: fail" pos)
 ;;
 
-(* not-predicate:  !e *)
+(* not-predicate (Negtative Lookahead):  ~e *)
 let notP (p : 'a parser) : unit parser =
   let* s = Parser.get () in
   let* pos = Parser.getPos () in

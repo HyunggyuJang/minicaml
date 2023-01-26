@@ -122,7 +122,6 @@ let test_statet_identity () =
 ;;
 
 let test_statet_nested () =
-  let module I = IntState in
   let module L = IntListState in
   let () =
     let m =

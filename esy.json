@@ -19,7 +19,6 @@
   },
   "devDependencies": {
     "@opam/alcotest": "1.5.0",
-    "@opam/ocaml-lsp-server": "1.11.5",
     "@opam/ocamlformat": "0.21.0",
     "@opam/ocamlformat-rpc": "0.21.0"
   }
