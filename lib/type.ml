@@ -290,6 +290,26 @@ let subst_ts subst ts ctx =
     ctx, TScheme (tvars, t)
 ;;
 
+let%test "subst_ts" =
+  let _, tx = Tyvar.from_age 0 in
+  let _, ty = Tyvar.from_age 1 in
+  let _, tz = Tyvar.from_age 2 in
+  let subst = emptytenv () in
+  let subst = ext subst tx TInt in
+  let subst = ext subst ty @@ TList (TVar tz) in
+  let ts = TScheme ([ tx ], TArrow (TVar tx, TVar ty)) in
+  (* age should respect [tz]; should start greater than 2 *)
+  let ctx = { tenv = []; n = 3 } in
+  let newtx =
+    match new_typevar ctx with
+    | _, TVar tx -> tx
+    | _ -> assert false
+  in
+  let _, ts = subst_ts subst ts ctx in
+  (* pprint_scheme Format.std_formatter ts; *)
+  ts = TScheme ([ newtx ], TArrow (TVar newtx, TList (TVar tz)))
+;;
+
 let subst_tyenv subst ctx =
   List.fold_right
     (fun (x, ts) ctx ->
