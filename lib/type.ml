@@ -102,20 +102,18 @@ let%test "remove" =
 
 let defaultenv () =
   let _, ta = Tyvar.from_age (-1) in
-  let _, tb = Tyvar.from_age (-2) in
-  let _, tc = Tyvar.from_age (-3) in
   let tenv = emptytenv () in
   let tenv =
     ext tenv "failwith" (TScheme ([ ta ], TArrow (TString, TVar ta)))
   in
   let tenv =
-    ext tenv "List.hd" (TScheme ([ tb ], TArrow (TList (TVar tb), TVar tb)))
+    ext tenv "List.hd" (TScheme ([ ta ], TArrow (TList (TVar ta), TVar ta)))
   in
   let tenv =
     ext
       tenv
       "List.tl"
-      (TScheme ([ tc ], TArrow (TList (TVar tc), TList (TVar tc))))
+      (TScheme ([ ta ], TArrow (TList (TVar ta), TList (TVar ta))))
   in
   tenv
 ;;
