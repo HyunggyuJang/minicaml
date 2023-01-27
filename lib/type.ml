@@ -70,7 +70,16 @@ type ctx =
 
 let new_typevar ctx =
   let n, tvar = Tyvar.from_age ctx.n in
-  { ctx with n = n + 1 }, TVar tvar
+  { ctx with n }, TVar tvar
+;;
+
+let%test "new_typevar" =
+  let ctx = {
+    tenv = [];
+    n = 0;
+  } in
+  let { n; _ }, _ = new_typevar ctx in
+  n = 1
 ;;
 
 let emptytenv () = []
@@ -230,6 +239,15 @@ let%test "subst_tyvars" =
 let vars_of_subst (subst : tysubst) =
   list_uniq @@ List.flatten @@ List.map (fun (x, t) -> x :: freetyvar_ty t) subst
 ;;
+
+let%test "vars_of_subst" =
+  let _, tx = Tyvar.from_age 0 in
+  let _, ty = Tyvar.from_age 1 in
+  let _, tz = Tyvar.from_age 2 in
+  let subst = emptytenv () in
+  let subst = ext subst tx TInt in
+  let subst = ext subst ty @@ TList (TVar tz) in
+  vars_of_subst subst = [ tx; ty; tz ]
 
 let subst_ts subst ts ctx =
   match ts with
