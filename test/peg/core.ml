@@ -10,7 +10,9 @@ let pp_parser_result a_show ppf r =
   Fmt.pf ppf "%a" (Fmt.result ~ok:pp_ok ~error:pp_err) r
 ;;
 
-let parser_result_testable a_show = Alcotest.testable (pp_parser_result a_show) ( = )
+let parser_result_testable a_show =
+  Alcotest.testable (pp_parser_result a_show) ( = )
+;;
 
 let test_item_syntax () =
   let open Peg.Core in
@@ -63,13 +65,14 @@ let test_basic_combinators () =
   let testUnit = test (fun () -> "unit") in
   let testOption =
     test (fun opt ->
-        match opt with
-        | None -> "none"
-        | Some c -> "some: " ^ implode [ c ])
+      match opt with
+      | None -> "none"
+      | Some c -> "some: " ^ implode [ c ])
   in
   let () =
     let p = item () in
-    testChar "just item" (Ok ('a', ([ 'b'; 'c' ], Pos.make 1 2))) @@ runParser p "abc"
+    testChar "just item" (Ok ('a', ([ 'b'; 'c' ], Pos.make 1 2)))
+    @@ runParser p "abc"
   in
   let () =
     let p = item () *> item () <* item () in
@@ -77,19 +80,22 @@ let test_basic_combinators () =
   in
   let () =
     let p = andP (char 'a') in
-    testUnit "andP: success" (Ok ((), ([ 'a' ], Pos.make 1 1))) @@ runParser p "a";
+    testUnit "andP: success" (Ok ((), ([ 'a' ], Pos.make 1 1)))
+    @@ runParser p "a";
     testUnit "andP: fail" (Error (ParseError.make "andP: fail" @@ Pos.make 1 1))
     @@ runParser p "b"
   in
   let () =
     let p = notP (char 'a') in
-    testUnit "notP: success" (Ok ((), ([ 'b' ], Pos.make 1 1))) @@ runParser p "b";
+    testUnit "notP: success" (Ok ((), ([ 'b' ], Pos.make 1 1)))
+    @@ runParser p "b";
     testUnit "notP: fail" (Error (ParseError.make "notP: fail" @@ Pos.make 1 1))
     @@ runParser p "a"
   in
   let () =
     let p = optional (char 'a') in
-    testOption "optional: exists" (Ok (Some 'a', ([], Pos.make 1 2))) @@ runParser p "a";
+    testOption "optional: exists" (Ok (Some 'a', ([], Pos.make 1 2)))
+    @@ runParser p "a";
     testOption "optional: not exists" (Ok (None, ([ 'b' ], Pos.make 1 1)))
     @@ runParser p "b"
   in
@@ -109,7 +115,9 @@ let test_string_basic () =
   let () =
     let p = string "abc" in
     testString "string" (Ok ("abc", ([], Pos.make 1 4))) @@ runParser p "abc";
-    testString "string: fail" (Error (ParseError.make "Expected abc" Pos.initialPos))
+    testString
+      "string: fail"
+      (Error (ParseError.make "Expected abc" Pos.initialPos))
     @@ runParser p "xyz"
   in
   let () =
@@ -123,7 +131,8 @@ let () =
   Alcotest.run
     "Peg"
     [ "item", [ Alcotest.test_case "syntax" `Quick test_item_syntax ]
-    ; "basic", [ Alcotest.test_case "combinators" `Quick test_basic_combinators ]
+    ; ( "basic"
+      , [ Alcotest.test_case "combinators" `Quick test_basic_combinators ] )
     ; "string", [ Alcotest.test_case "basic" `Quick test_string_basic ]
     ]
 ;;

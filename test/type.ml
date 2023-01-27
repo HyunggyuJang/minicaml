@@ -35,7 +35,9 @@ let infer_test ?(normalize = false) ?(print_error = false) name exp tenv want =
       if print_error then Fmt.pr "%s%a\n" (Printexc.to_string e) Fmt.flush ();
       None
   in
-  let testable' = if normalize then type_testable_normalize else type_testable in
+  let testable' =
+    if normalize then type_testable_normalize else type_testable
+  in
   Alcotest.(check (option testable')) name want got
 ;;
 
@@ -185,7 +187,9 @@ let test_letrec () =
   let tenv = ext tenv "b" (ty_of_scheme @@ TVar tb) in
   let table =
     [ "let rec id x = x in id 1", Some TInt, etenv
-    ; "let rec fact n = if n = 0 then 1 else n * fact (n - 1) in fact 5", Some TInt, etenv
+    ; ( "let rec fact n = if n = 0 then 1 else n * fact (n - 1) in fact 5"
+      , Some TInt
+      , etenv )
     ; ( {|
       let rec fact n = fun k ->
         if n = 0 then k 1
@@ -240,7 +244,9 @@ let test_match () =
   let tenv = defaultenv () in
   let tenv = ext tenv "x'" (ty_of_scheme @@ TVar tx) in
   let tenv = ext tenv "y'" (ty_of_scheme @@ TVar ty) in
-  List.iter (fun (exp, want) -> infer_test ~print_error:true exp exp tenv want) table
+  List.iter
+    (fun (exp, want) -> infer_test ~print_error:true exp exp tenv want)
+    table
 ;;
 
 let () =

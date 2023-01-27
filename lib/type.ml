@@ -74,10 +74,7 @@ let new_typevar ctx =
 ;;
 
 let%test "new_typevar" =
-  let ctx = {
-    tenv = [];
-    n = 0;
-  } in
+  let ctx = { tenv = []; n = 0 } in
   let { n; _ }, _ = new_typevar ctx in
   n = 1
 ;;
@@ -88,7 +85,9 @@ let ext = Eval.ext
 
 let lookup_by_age tvar subst =
   let age = Tyvar.age tvar in
-  List.find_map (fun (tvar, ty) -> if age = Tyvar.age tvar then Some ty else None) subst
+  List.find_map
+    (fun (tvar, ty) -> if age = Tyvar.age tvar then Some ty else None)
+    subst
 ;;
 
 let remove x tenv = List.remove_assoc x tenv
@@ -106,10 +105,17 @@ let defaultenv () =
   let _, tb = Tyvar.from_age (-2) in
   let _, tc = Tyvar.from_age (-3) in
   let tenv = emptytenv () in
-  let tenv = ext tenv "failwith" (TScheme ([ ta ], TArrow (TString, TVar ta))) in
-  let tenv = ext tenv "List.hd" (TScheme ([ tb ], TArrow (TList (TVar tb), TVar tb))) in
   let tenv =
-    ext tenv "List.tl" (TScheme ([ tc ], TArrow (TList (TVar tc), TList (TVar tc))))
+    ext tenv "failwith" (TScheme ([ ta ], TArrow (TString, TVar ta)))
+  in
+  let tenv =
+    ext tenv "List.hd" (TScheme ([ tb ], TArrow (TList (TVar tb), TVar tb)))
+  in
+  let tenv =
+    ext
+      tenv
+      "List.tl"
+      (TScheme ([ tc ], TArrow (TList (TVar tc), TList (TVar tc))))
   in
   tenv
 ;;
@@ -129,7 +135,10 @@ let freevar e =
 ;;
 
 let%test "freevar" = freevar (Var "x") = [ "x" ]
-let%test "freevar2" = freevar (Cons (Var "x", Cons (Var "y", Empty))) = [ "x"; "y" ]
+
+let%test "freevar2" =
+  freevar (Cons (Var "x", Cons (Var "y", Empty))) = [ "x"; "y" ]
+;;
 
 let list_diff l1 l2 =
   let module SS = TyvarSet in
@@ -199,8 +208,8 @@ let rec subst_ty subst t =
   | TArrow (from_t, to_t) -> TArrow (subst_ty subst from_t, subst_ty subst to_t)
   | TVar x ->
     (match lookup_by_age x subst with
-    | None -> TVar x
-    | Some t -> t)
+     | None -> TVar x
+     | Some t -> t)
   | TList t -> TList (subst_ty subst t)
 ;;
 
@@ -237,7 +246,9 @@ let%test "subst_tyvars" =
 ;;
 
 let vars_of_subst (subst : tysubst) =
-  list_uniq @@ List.flatten @@ List.map (fun (x, t) -> x :: freetyvar_ty t) subst
+  list_uniq
+  @@ List.flatten
+  @@ List.map (fun (x, t) -> x :: freetyvar_ty t) subst
 ;;
 
 let%test "vars_of_subst" =
@@ -248,12 +259,18 @@ let%test "vars_of_subst" =
   let subst = ext subst tx TInt in
   let subst = ext subst ty @@ TList (TVar tz) in
   vars_of_subst subst = [ tx; ty; tz ]
+;;
 
 let subst_ts subst ts ctx =
   match ts with
   | TScheme (tvars, t) ->
+    (* [tvars] are the binding variables *)
+    (* the variables in [t] other than the ones in [tvars] are the free
+       variables *)
     let collisionvars = list_inter tvars @@ vars_of_subst subst in
+    (* the variables (wrongly) captured ones *)
     let ctx, subst' =
+      (* generate a mapping from captured vars to fresh variables *)
       List.fold_left
         (fun (ctx, subst') var ->
           let ctx, newvar = new_typevar ctx in
@@ -381,7 +398,9 @@ let generalize t tenv =
   TScheme (tvars, t)
 ;;
 
-let%test "generalize: simple" = generalize TInt (emptytenv ()) = TScheme ([], TInt)
+let%test "generalize: simple" =
+  generalize TInt (emptytenv ()) = TScheme ([], TInt)
+;;
 
 let%test "generalize: complex" =
   let ta = "a", 0 in
@@ -398,10 +417,10 @@ let rec infer ctx e =
   match e with
   | Var x ->
     (match lookup x ctx.tenv with
-    | Some ts ->
-      let ctx, t = instantiate ts ctx in
-      ctx, t, esubst
-    | None -> failwith @@ "failed to lookup type of var " ^ x)
+     | Some ts ->
+       let ctx, t = instantiate ts ctx in
+       ctx, t, esubst
+     | None -> failwith @@ "failed to lookup type of var " ^ x)
   | Unit -> ctx, TUnit, esubst
   | IntLit _ -> ctx, TInt, esubst
   | BoolLit _ -> ctx, TBool, esubst
@@ -505,7 +524,9 @@ let rec infer ctx e =
       let subst = compose_subst subst subst' in
       let t1 = subst_ty subst t1 in
       let bt = subst_ty subst bt in
-      let tenv = List.fold_left (fun tenv var -> remove var tenv) ctx.tenv vars in
+      let tenv =
+        List.fold_left (fun tenv var -> remove var tenv) ctx.tenv vars
+      in
       subst, { ctx with tenv }, bt, t1
     in
     let ctx, t1, subst = infer ctx e1 in

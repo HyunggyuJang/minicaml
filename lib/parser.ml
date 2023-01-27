@@ -49,7 +49,9 @@ let escape =
 
 let regularchar =
   let c =
-    let* c = notP (choice [ char '\\'; char '"'; char '\''; char '\n' ]) *> item () in
+    let* c =
+      notP (choice [ char '\\'; char '"'; char '\''; char '\n' ]) *> item ()
+    in
     pure @@ Peg.Utils.implode [ c ]
   in
   escape <|> c
@@ -210,7 +212,8 @@ let rec exp () =
     let* cs = cases in
     pure @@ Match (e, cs)
   in
-  choice [ prefix; funP'; letP'; letRecP; ifP'; matchP' ] <?> "(, fun, let, if, match"
+  choice [ prefix; funP'; letP'; letRecP; ifP'; matchP' ]
+  <?> "(, fun, let, if, match"
 
 and prefix () =
   let infix0 = pure () >>= infix0 in

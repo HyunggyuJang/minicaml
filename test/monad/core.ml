@@ -85,16 +85,21 @@ let test_optiont_identity () =
     Alcotest.(check (option int)) "from_option" (Some 1) v
   in
   let () =
-    let v = O.run @@ O.fold (O.from_option (Some 1)) (fun i -> i + 100) (fun () -> -1) in
+    let v =
+      O.run @@ O.fold (O.from_option (Some 1)) (fun i -> i + 100) (fun () -> -1)
+    in
     Alcotest.(check (option int)) "fold_some" (Some 101) v
   in
   let () =
-    let v = O.run @@ O.fold (O.from_option None) (fun i -> i + 100) (fun () -> -1) in
+    let v =
+      O.run @@ O.fold (O.from_option None) (fun i -> i + 100) (fun () -> -1)
+    in
     Alcotest.(check (option int)) "fold_none" (Some (-1)) v
   in
   let () =
     let v =
-      O.run @@ O.foldF (O.pure 1) (fun i -> O.pure (i * 5)) (fun () -> O.pure (-1))
+      O.run
+      @@ O.foldF (O.pure 1) (fun i -> O.pure (i * 5)) (fun () -> O.pure (-1))
     in
     Alcotest.(check (option int)) "foldF" (Some 5) v
   in
@@ -131,7 +136,8 @@ let test_statet_nested () =
       L.pure (ls1, is1)
     in
     let v = L.run m [ 10 ] 100 in
-    Alcotest.(check (pair (list int) int)) "initial state" ([ 10 ], 100) @@ fst (fst v)
+    Alcotest.(check (pair (list int) int)) "initial state" ([ 10 ], 100)
+    @@ fst (fst v)
   in
   ()
 ;;
@@ -163,18 +169,22 @@ let test_eithert_identity () =
     Alcotest.(check (result int myerror_testable)) "fold_right" (Ok 100) v
   in
   let () =
-    let v = M.run @@ M.fold (M.throwError (B "fail")) (fun s -> s * 100) (fun _ -> -1) in
+    let v =
+      M.run @@ M.fold (M.throwError (B "fail")) (fun s -> s * 100) (fun _ -> -1)
+    in
     Alcotest.(check (result int myerror_testable)) "fold_left" (Ok (-1)) v
   in
   let () =
     let v =
-      M.run @@ M.bimap (M.throwError (B "fail")) (fun s -> s * 100) (fun _ -> Fatal)
+      M.run
+      @@ M.bimap (M.throwError (B "fail")) (fun s -> s * 100) (fun _ -> Fatal)
     in
     Alcotest.(check (result int myerror_testable)) "bimap" (Error Fatal) v
   in
   let () =
     let v =
-      M.run @@ M.foldF (M.pure 1) (fun s -> M.throwError (A s)) (fun _ -> M.pure 1)
+      M.run
+      @@ M.foldF (M.pure 1) (fun s -> M.throwError (A s)) (fun _ -> M.pure 1)
     in
     Alcotest.(check (result int myerror_testable)) "foldF" (Error (A 1)) v
   in
@@ -190,8 +200,8 @@ let test_eithert_identity () =
     let v =
       M.run
       @@ M.catchError (M.throwError (A 100)) (function
-             | A i -> M.pure i
-             | e -> M.throwError e)
+           | A i -> M.pure i
+           | e -> M.throwError e)
     in
     Alcotest.(check (result int myerror_testable)) "raise_3" (Ok 100) v
   in

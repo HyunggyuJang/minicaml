@@ -145,14 +145,15 @@ let test_var () =
     ] [@ocamlformat "disable"]
   in
   List.iter
-    (fun (exp, want) -> Alcotest.(check value_testable) exp want (eval (parse exp) env))
+    (fun (exp, want) ->
+      Alcotest.(check value_testable) exp want (eval (parse exp) env))
     table;
   Alcotest.check_raises
     "not exist variable"
     (Stdlib.Failure "lookup failed with key: none")
     (fun () ->
-      let _ = eval (parse "none") env in
-      ())
+    let _ = eval (parse "none") env in
+    ())
 ;;
 
 let test_let () =
@@ -169,7 +170,10 @@ let test_let () =
   in
   List.iter
     (fun (exp, want) ->
-      Alcotest.(check value_testable) exp want (eval (parse exp) @@ defaultenv ()))
+      Alcotest.(check value_testable)
+        exp
+        want
+        (eval (parse exp) @@ defaultenv ()))
     table
 ;;
 
@@ -189,7 +193,10 @@ let test_func () =
   in
   List.iter
     (fun (exp, want) ->
-      Alcotest.(check value_testable) exp want (eval (parse exp) @@ defaultenv ()))
+      Alcotest.(check value_testable)
+        exp
+        want
+        (eval (parse exp) @@ defaultenv ()))
     table
 ;;
 
@@ -212,7 +219,10 @@ in fact 5|}
   in
   List.iter
     (fun (exp, want) ->
-      Alcotest.(check value_testable) exp want (eval (parse exp) @@ defaultenv ()))
+      Alcotest.(check value_testable)
+        exp
+        want
+        (eval (parse exp) @@ defaultenv ()))
     table
 ;;
 
@@ -231,7 +241,10 @@ let test_list () =
   in
   List.iter
     (fun (exp, want) ->
-      Alcotest.(check value_testable) exp want (eval (parse exp) @@ defaultenv ()))
+      Alcotest.(check value_testable)
+        exp
+        want
+        (eval (parse exp) @@ defaultenv ()))
     table
 ;;
 
@@ -253,7 +266,10 @@ let test_match () =
   in
   List.iter
     (fun (exp, want) ->
-      Alcotest.(check value_testable) exp want (eval (parse exp) @@ defaultenv ()))
+      Alcotest.(check value_testable)
+        exp
+        want
+        (eval (parse exp) @@ defaultenv ()))
     table
 ;;
 

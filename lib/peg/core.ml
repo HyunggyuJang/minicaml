@@ -59,7 +59,11 @@ module Parser = struct
 
   let run m s = ParseResult.run @@ runStateT m s
   let foldF m fa fb : 'a m = fun s -> ParseResult.foldF (m s) fa fb
-  let either xp yp : 'a m = fun s -> ParseResult.either (fun () -> xp s) (fun () -> yp s)
+
+  let either xp yp : 'a m =
+   fun s -> ParseResult.either (fun () -> xp s) (fun () -> yp s)
+ ;;
+
   let empty () : 'a m = fun _ -> ParseResult.empty ()
   let throwError e : 'a m = lift @@ ParseResult.throwError e
 
@@ -96,7 +100,7 @@ let option default p = p <|> pure default
 (* optional: e? *)
 let optional p = option None (p >>= fun x -> pure @@ Some x)
 
-(* and-predicate (Lookahead):  &e *)
+(* and-predicate (Lookahead): &e *)
 let andP (p : 'a parser) : unit parser =
   let* s = Parser.get () in
   let* pos = Parser.getPos () in
@@ -106,7 +110,7 @@ let andP (p : 'a parser) : unit parser =
     (fun _ -> ParseResult.throwError @@ ParseError.make "andP: fail" pos)
 ;;
 
-(* not-predicate (Negtative Lookahead):  ~e *)
+(* not-predicate (Negtative Lookahead): ~e *)
 let notP (p : 'a parser) : unit parser =
   let* s = Parser.get () in
   let* pos = Parser.getPos () in
@@ -169,9 +173,16 @@ let eof x =
 ;;
 
 let char c = satisfy (( = ) c) <?> implode [ c ]
-let range l r = satisfy (fun c -> l <= c && c <= r) <?> Fmt.str "range of %c to %c" l r
+
+let range l r =
+  satisfy (fun c -> l <= c && c <= r) <?> Fmt.str "range of %c to %c" l r
+;;
+
 let one_of cs = satisfy (fun c -> List.mem c cs) <?> "one of " ^ implode cs
-let none_of cs = satisfy (fun c -> not @@ List.mem c cs) <?> "none of " ^ implode cs
+
+let none_of cs =
+  satisfy (fun c -> not @@ List.mem c cs) <?> "none of " ^ implode cs
+;;
 
 (* char *)
 

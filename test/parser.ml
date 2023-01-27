@@ -5,7 +5,10 @@ let exp_testable = Alcotest.testable Syntax.pprint_exp ( = )
 
 let exp_test name expected input =
   let open Parser in
-  Alcotest.(check (option exp_testable)) name (Some expected) (parse exp (explode input))
+  Alcotest.(check (option exp_testable))
+    name
+    (Some expected)
+    (parse exp (explode input))
 ;;
 
 let test_tokens () =
@@ -24,8 +27,14 @@ let test_tokens () =
     (fun (name, parser, want, input) ->
       Alcotest.(check (option string)) name want (parse parser (explode input)))
     table;
-  Alcotest.(check (option int)) "int(plus)" (Some 123) (parse int (explode "123"));
-  Alcotest.(check (option int)) "int(minus)" (Some (-123)) (parse int (explode "-123"));
+  Alcotest.(check (option int))
+    "int(plus)"
+    (Some 123)
+    (parse int (explode "123"));
+  Alcotest.(check (option int))
+    "int(minus)"
+    (Some (-123))
+    (parse int (explode "-123"));
   Alcotest.(check (option exp_testable))
     "empty_list"
     (Some Empty)
@@ -64,7 +73,10 @@ let test_pattern () =
 
 let test_match () =
   let open Syntax in
-  exp_test "" (Match (Var "x", [ IntLit 1, IntLit 100 ])) "match x with 1 -> 100"
+  exp_test
+    ""
+    (Match (Var "x", [ IntLit 1, IntLit 100 ]))
+    "match x with 1 -> 100"
 ;;
 
 let test_math () =
@@ -85,7 +97,10 @@ let test_list () =
   let i n = IntLit n in
   exp_test "empty" Empty "[]";
   exp_test "simple" (Cons (i 1, Empty)) "1 :: []";
-  exp_test "simple long" (Cons (i 1, Cons (i 2, Cons (i 3, Empty)))) "1 :: 2 :: 3 :: []";
+  exp_test
+    "simple long"
+    (Cons (i 1, Cons (i 2, Cons (i 3, Empty))))
+    "1 :: 2 :: 3 :: []";
   exp_test "literal one" (Cons (i 1, Empty)) "[1]";
   exp_test "literal one'" (Cons (i 1, Empty)) "[1;]";
   exp_test "literal two" (Cons (i 1, Cons (i 2, Empty))) "[1; 2]";
@@ -99,7 +114,10 @@ let test_fn () =
 
 let test_let () =
   let open Syntax in
-  exp_test "let_cmp" (Let ("x", IntLit 1, Eq (Var "x", IntLit 10))) "let x = 1 in x = 10";
+  exp_test
+    "let_cmp"
+    (Let ("x", IntLit 1, Eq (Var "x", IntLit 10)))
+    "let x = 1 in x = 10";
   exp_test
     "let_rec"
     (LetRec ("fn", "_", IntLit 1, Eq (App (Var "fn", IntLit 2), IntLit 10)))
@@ -108,7 +126,10 @@ let test_let () =
 
 let test_if () =
   let open Syntax in
-  exp_test "simple" (If (BoolLit true, IntLit 1, IntLit 2)) "if true then 1 else 2"
+  exp_test
+    "simple"
+    (If (BoolLit true, IntLit 1, IntLit 2))
+    "if true then 1 else 2"
 ;;
 
 let test_prefix () =

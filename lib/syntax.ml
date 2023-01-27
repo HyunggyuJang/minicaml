@@ -85,19 +85,49 @@ let rec pprint_exp ppf e =
   | Minus (e1, e2)
   | Times (e1, e2)
   | Div (e1, e2)
-  | Cons (e1, e2) -> Fmt.pf ppf "@[<v 2>%s@ %a@ %a@]" ename pprint_exp e1 pprint_exp e2
+  | Cons (e1, e2) ->
+    Fmt.pf ppf "@[<v 2>%s@ %a@ %a@]" ename pprint_exp e1 pprint_exp e2
   | If (ce, e1, e2) ->
-    Fmt.pf ppf "@[<v 2>%s@ %a@ %a@ %a@]" ename pprint_exp ce pprint_exp e1 pprint_exp e2
+    Fmt.pf
+      ppf
+      "@[<v 2>%s@ %a@ %a@ %a@]"
+      ename
+      pprint_exp
+      ce
+      pprint_exp
+      e1
+      pprint_exp
+      e2
   | Fun (n, e) -> Fmt.pf ppf "@[<v 2>%s@ %s@ %a@]" ename n pprint_exp e
   | Let (n, e1, e2) ->
     Fmt.pf ppf "@[<v 2>%s@ %s@ %a@ %a@]" ename n pprint_exp e1 pprint_exp e2
   | LetRec (n, x, e1, e2) ->
-    Fmt.pf ppf "@[<v 2>%s@ %s@ %s@ %a@ %a@]" ename n x pprint_exp e1 pprint_exp e2
+    Fmt.pf
+      ppf
+      "@[<v 2>%s@ %s@ %s@ %a@ %a@]"
+      ename
+      n
+      x
+      pprint_exp
+      e1
+      pprint_exp
+      e2
   | Match (e, es) ->
     let pprint_pattern ppf (e1, e2) =
-      Fmt.pf ppf "@[<v 2>%a@]" (Fmt.pair ~sep:Fmt.semi pprint_exp pprint_exp) (e1, e2)
+      Fmt.pf
+        ppf
+        "@[<v 2>%a@]"
+        (Fmt.pair ~sep:Fmt.semi pprint_exp pprint_exp)
+        (e1, e2)
     in
-    Fmt.pf ppf "@[<v 2>%s@ %a@ %a@]" ename pprint_exp e (Fmt.list pprint_pattern) es
+    Fmt.pf
+      ppf
+      "@[<v 2>%s@ %a@ %a@]"
+      ename
+      pprint_exp
+      e
+      (Fmt.list pprint_pattern)
+      es
 ;;
 
 let rec pprint_value ppf = function
@@ -109,7 +139,15 @@ let rec pprint_value ppf = function
   | FunVal (n, e, env) ->
     Fmt.pf ppf "@[<v 2>FunVal@ %s@ %a@ %a@]" n pprint_exp e pprint_env env
   | RecFunVal (n, x, e, env) ->
-    Fmt.pf ppf "@[<v 2>RetFunVal@ %s@ %s@ %a@ %a@]" n x pprint_exp e pprint_env env
+    Fmt.pf
+      ppf
+      "@[<v 2>RetFunVal@ %s@ %s@ %a@ %a@]"
+      n
+      x
+      pprint_exp
+      e
+      pprint_env
+      env
 
 and pprint_env ppf env =
   let pp_list = Fmt.(list (pair string pprint_value)) in
@@ -123,5 +161,6 @@ let pprint_value_simplified ppf = function
   | StrVal s -> Fmt.pf ppf "StrVal %s" s
   | ListVal l -> Fmt.pf ppf "@[<v 2>ListVal@ %a@]" (Fmt.list pprint_value) l
   | FunVal (n, e, _) -> Fmt.pf ppf "@[<v 2>FunVal@ %s@ %a@]" n pprint_exp e
-  | RecFunVal (n, x, e, _) -> Fmt.pf ppf "@[<v 2>RetFunVal@ %s@ %s@ %a@]" n x pprint_exp e
+  | RecFunVal (n, x, e, _) ->
+    Fmt.pf ppf "@[<v 2>RetFunVal@ %s@ %s@ %a@]" n x pprint_exp e
 ;;

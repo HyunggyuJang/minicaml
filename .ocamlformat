@@ -1,3 +1,4 @@
 profile = janestreet
 break-infix-before-func = false
+margin = 80
 wrap-comments = true
