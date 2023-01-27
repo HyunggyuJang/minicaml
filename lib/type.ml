@@ -279,10 +279,15 @@ let subst_ts subst ts ctx =
         (ctx, [])
         collisionvars
     in
-    (* fresh *)
+    (* now the [tvars] do not collide with the variables from subst *)
     let tvars = subst_tvars subst' tvars in
+    (* update [t] accordingly *)
     let t = subst_ty subst' t in
-    let tvars = subst_tvars subst tvars in
+    (* Why do we change the variables of [TScheme] rather than those of
+       [subst]? *)
+    (* This is because [subst] has more global effect, while the [tvars] only
+       affect [t], that is, has more local effect. *)
+    (* Now substitute free variables of in [t] *)
     let t = subst_ty subst t in
     ctx, TScheme (tvars, t)
 ;;
