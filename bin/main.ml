@@ -49,7 +49,7 @@ let run s =
   pure (v, t)
 ;;
 
-let rec eat_script () =
+let eat_script () =
   let buffer = ref "" in
   let next = ref true in
   let terminate = Str.regexp_string ";;" in
@@ -73,7 +73,7 @@ let rec eat_script () =
       ()
     done
   in
-  if not (!buffer = "") then !buffer else eat_script ()
+  !buffer
 ;;
 
 let () =
