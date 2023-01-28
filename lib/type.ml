@@ -324,6 +324,7 @@ let subst_eql subst eql =
   List.map (fun (t1, t2) -> subst_ty subst t1, subst_ty subst t2) eql
 ;;
 
+(** [compose_subst θ2 θ1] is an encoding of θ2 o θ1 *)
 let compose_subst subst2 subst1 =
   let subst1' = List.map (fun (tx, t) -> tx, subst_ty subst2 t) subst1 in
   List.fold_left
@@ -347,8 +348,18 @@ let unify eql =
         | TArrow (from1, to1), TArrow (from2, to2) ->
           solve ((from1, from2) :: (to1, to2) :: eql) subst
         | TList t1, TList t2 -> solve ((t1, t2) :: eql) subst
-        | TVar x, _ -> sub x t2 eql subst
-        | _, TVar x -> sub x t1 eql subst
+        | TVar x, _ ->
+          if occurs t1 t2
+          then
+            Error
+              (Fmt.str "type %s contains a reference to itself" (type_name t2))
+          else solve (subst_eql [ x, t2 ] eql) (compose_subst [ x, t2 ] subst)
+        | _, TVar x ->
+          if occurs t2 t1
+          then
+            Error
+              (Fmt.str "type %s contains a reference to itself" (type_name t1))
+          else solve (subst_eql [ x, t1 ] eql) (compose_subst [ x, t1 ] subst)
         | _, _ ->
           Error
             (Fmt.str
@@ -359,16 +370,6 @@ let unify eql =
                t1
                pprint_type
                t2))
-  and sub x t eql subst =
-    if occurs (TVar x) t
-    then Error (Fmt.str "type %s contains a reference to itself" (type_name t))
-    else (
-      match solve (subst_eql [ x, t ] eql) [] with
-      | Ok subst' ->
-        let subst = compose_subst subst subst' in
-        let subst = compose_subst subst [ x, t ] in
-        Ok subst
-      | _ as e -> e)
   in
   match solve eql [] with
   | Error message -> failwith @@ "unify failed: " ^ message
