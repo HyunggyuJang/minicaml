@@ -401,6 +401,7 @@ let compose_subst_with_infer subst1 subst2 =
   subst
 ;;
 
+(** Polymorphic type always instantiate fresh variables for bound type variables *)
 let instantiate ts ctx =
   match ts with
   | TScheme (tvars, t) ->
@@ -408,7 +409,7 @@ let instantiate ts ctx =
       List.fold_left
         (fun (ctx, subst) tvar ->
           let ctx, newtvar = new_typevar ctx in
-          let subst = compose_subst subst [ tvar, newtvar ] in
+          let subst = ext subst tvar newtvar in
           ctx, subst)
         (ctx, [])
         tvars
