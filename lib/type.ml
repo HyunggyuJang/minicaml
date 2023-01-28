@@ -477,11 +477,11 @@ let rec infer ctx e =
     ctx, tt, subst
   | Fun (x, e) ->
     let ctx, tvar = new_typevar ctx in
-    let tenv = ext ctx.tenv x (ty_of_scheme tvar) in
+    let original_tenv = ctx.tenv in
+    let tenv = ext original_tenv x (ty_of_scheme tvar) in
     let ctx, t, subst = infer { ctx with tenv } e in
     let tvar = subst_ty subst tvar in
-    let tenv = remove x ctx.tenv in
-    { ctx with tenv }, TArrow (tvar, t), subst
+    { ctx with tenv = original_tenv }, TArrow (tvar, t), subst
   | App (e1, e2) ->
     let ctx, t1, subst1 = infer ctx e1 in
     let ctx, t2, subst2 = infer ctx e2 in
