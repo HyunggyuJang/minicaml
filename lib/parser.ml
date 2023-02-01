@@ -318,7 +318,7 @@ and pattern_inner () = literalP ()
 
 and literalP () =
   let list = pure () >>= list in
-  (* let tuple = pure () >>= tuple in *)
+  let tuple = pure () >>= tuple in
   choice
     [ (fun v -> Var v) <$> var <?> "variable"
     ; (fun i -> IntLit i) <$> int <?> "number"
@@ -326,7 +326,8 @@ and literalP () =
     ; (fun s -> StrLit s) <$> stringLit <?> "string"
     ; unitP <?> "unit"
     ; empty_list <?> "[]"
-    ; list <?> "list" (* ; tuple <?> "tuple" *)
+    ; list <?> "list"
+    ; tuple <?> "tuple"
     ]
 
 and list () =
@@ -345,9 +346,11 @@ and list () =
 
 and tuple () =
   let exp = pure () >>= exp in
+  let* _ = less <* ows in
   let* e = exp in
   let* es = many1 (ows *> comma *> ows *> exp) in
   let* _ = optional @@ (ows *> comma) in
+  let* _ = ows *> greater in
   pure @@ Tuple (e :: es)
 ;;
 

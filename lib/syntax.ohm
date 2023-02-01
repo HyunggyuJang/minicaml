@@ -46,8 +46,8 @@ MiniCaml {
   Pattern_inner = Literals
 
   Literals =
-    | var
     | Tuple
+    | var
     | int
     | bool
     | string
