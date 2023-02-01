@@ -566,7 +566,7 @@ let rec infer ctx e =
         (esubst, esubst, ctx, [])
         es
     in
-    n, TTuple ts, subst
+    n, TTuple (List.rev ts), subst
 
 and prefixop_infer ctx e1 expectedType retType =
   let n, t1, subst1 = infer ctx e1 in
