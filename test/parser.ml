@@ -11,6 +11,14 @@ let exp_test name expected input =
     (parse exp (explode input))
 ;;
 
+let fail_test name input =
+  let open Parser in
+  Alcotest.(check (option exp_testable))
+    name
+    None
+    (parse exp (explode input))
+;;
+
 let test_tokens () =
   let open Parser in
   let open Syntax in
@@ -107,6 +115,22 @@ let test_list () =
   exp_test "literal two'" (Cons (i 1, Cons (i 2, Empty))) "[1; 2;]"
 ;;
 
+let test_tuple () =
+  let open Syntax in
+  let i n = IntLit n in
+  let b tf = BoolLit tf in
+  fail_test "empty" "<>";
+  fail_test "singleton" "<1>";
+  exp_test
+    "simple tuple"
+    (Tuple [i 1;i 2;i 3])
+    "<1, 2, 3>";
+  exp_test
+    "mixed tuple"
+    (Tuple [i 1;b true;i 3])
+    "<1, true, 3>";
+;;
+
 let test_fn () =
   let open Syntax in
   exp_test "id" (Fun ("x", Var "x")) "fun x -> x"
@@ -146,6 +170,7 @@ let () =
         ; Alcotest.test_case "match" `Quick test_match
         ; Alcotest.test_case "math" `Quick test_math
         ; Alcotest.test_case "list" `Quick test_list
+        ; Alcotest.test_case "tuple" `Quick test_tuple
         ; Alcotest.test_case "fn" `Quick test_fn
         ; Alcotest.test_case "let" `Quick test_let
         ; Alcotest.test_case "if" `Quick test_if

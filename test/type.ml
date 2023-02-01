@@ -224,6 +224,21 @@ let test_list () =
   List.iter (fun (exp, want) -> infer_test exp exp (defaultenv ()) want) table
 ;;
 
+let test_tuple () =
+  let open Type in
+  let table =
+    [ "<1, 2>", Some (TTuple [TInt; TInt])
+    ; "<true, false>", Some (TTuple [TBool; TBool])
+    ; "<1, true>", Some (TTuple [TInt; TBool])
+    ; "<1, true, 2>", Some (TTuple [TInt; TBool; TInt])
+    ; "let x = 1 in <x, x>", Some (TTuple [TInt; TInt])
+    ; "<>", None
+    ; "<1>", None
+    ]
+  in
+  List.iter (fun (exp, want) -> infer_test exp exp (defaultenv ()) want) table
+;;
+
 let test_match () =
   let open Type in
   let _, ta = Tyvar.from_age 0 in
@@ -261,6 +276,7 @@ let () =
         ; Alcotest.test_case "let" `Quick test_let
         ; Alcotest.test_case "letrec" `Quick test_letrec
         ; Alcotest.test_case "list" `Quick test_list
+        ; Alcotest.test_case "tuple" `Quick test_tuple
         ; Alcotest.test_case "match" `Quick test_match
         ] )
     ]
