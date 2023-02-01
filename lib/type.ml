@@ -21,6 +21,7 @@ type ty =
   | TArrow of ty * ty
   | TVar of tyvar
   | TList of ty
+  | TTuple of ty list
 
 type scheme = TScheme of tyvar list * ty
 
@@ -35,6 +36,7 @@ let type_name = function
   | TArrow _ -> "fun"
   | TVar _ -> "tvar"
   | TList _ -> "list"
+  | TTuple _ -> "tuple"
 ;;
 
 let rec pprint_type ppf t =
@@ -45,6 +47,8 @@ let rec pprint_type ppf t =
     Fmt.pf ppf "@[<v 2>%s@ %a->@ %a@]" tname pprint_type t1 pprint_type t2
   | TVar x -> Fmt.pf ppf "@[<v 2>%s(%s)@]" tname (Tyvar.name x)
   | TList t -> Fmt.pf ppf "@[<v 2>%s@ %a@]" tname pprint_type t
+  | TTuple ts ->
+    Fmt.pf ppf "@[<v 2>%s@ %a@]" tname (Fmt.list ~sep:Fmt.comma pprint_type) ts
 ;;
 
 let pprint_scheme ppf ts =
@@ -166,6 +170,7 @@ let rec freetyvar_ty t =
   | TArrow (t1, t2) -> List.concat [ freetyvar_ty t1; freetyvar_ty t2 ]
   | TVar x -> [ x ]
   | TList t -> freetyvar_ty t
+  | TTuple ts -> List.concat_map freetyvar_ty ts
 ;;
 
 let freetyvar_sc ts =
@@ -209,6 +214,7 @@ let rec subst_ty subst t =
      | None -> TVar x
      | Some t -> t)
   | TList t -> TList (subst_ty subst t)
+  | TTuple ts -> TTuple (List.map (subst_ty subst) ts)
 ;;
 
 let%test "subst_ty: simple" =
@@ -454,10 +460,10 @@ let rec infer ctx e =
     let n, ct, subst = infer ctx c in
     let subst_c = unify [ ct, TBool ] in
     let subst = compose_subst subst_c subst in
-    let ctx = subst_tyenv subst {ctx with n} in
+    let ctx = subst_tyenv subst { ctx with n } in
     let n, tt, subst_t = infer ctx et in
     let subst = compose_subst subst_t subst in
-    let ctx = subst_tyenv subst_t {ctx with n} in
+    let ctx = subst_tyenv subst_t { ctx with n } in
     let n, tf, subst_f = infer ctx ef in
     let subst = compose_subst subst_f subst in
     let tt = subst_ty subst_f tt in
@@ -473,16 +479,16 @@ let rec infer ctx e =
     n, TArrow (tvar, t), subst
   | App (e1, e2) ->
     let n, t1, subst1 = infer ctx e1 in
-    let ctx = subst_tyenv subst1 {ctx with n} in
+    let ctx = subst_tyenv subst1 { ctx with n } in
     let n, t2, subst2 = infer ctx e2 in
-    let ctx, tvar = new_typevar {ctx with n} in
+    let ctx, tvar = new_typevar { ctx with n } in
     let t1 = subst_ty subst2 t1 in
     let subst3 = unify [ t1, TArrow (t2, tvar) ] in
     let tvar = subst_ty subst3 tvar in
     ctx.n, tvar, compose_subst subst3 (compose_subst subst2 subst1)
   | Let (x, e1, e2) ->
     let n, t1, subst1 = infer ctx e1 in
-    let ctx = subst_tyenv subst1 {ctx with n} in
+    let ctx = subst_tyenv subst1 { ctx with n } in
     let s1 = generalize t1 ctx.tenv in
     let tenv = ext ctx.tenv x s1 in
     let n, t2, subst2 = infer { ctx with tenv } e2 in
@@ -498,7 +504,7 @@ let rec infer ctx e =
     let tvar_arg = subst_ty subst tvar_arg in
     let subst' = unify [ tvar_fn, TArrow (tvar_arg, t1) ] in
     let subst = compose_subst subst' subst in
-    let ctx = subst_tyenv subst {n; tenv = tenv_original} in
+    let ctx = subst_tyenv subst { n; tenv = tenv_original } in
     let tenv = ctx.tenv in
     let tvar_fn = subst_ty subst' tvar_fn in
     let tvar_fn = generalize tvar_fn tenv in
@@ -521,7 +527,7 @@ let rec infer ctx e =
       let subst = compose_subst subst' subst in
       let subst' = unify [ t1, pt ] in
       let subst = compose_subst subst' subst in
-      let ctx = subst_tyenv subst {ctx with n} in
+      let ctx = subst_tyenv subst { ctx with n } in
       let n, bt', subst' = infer ctx b in
       let subst = compose_subst subst' subst in
       let subst' = unify [ bt, bt' ] in
@@ -534,7 +540,7 @@ let rec infer ctx e =
       subst, { n; tenv }, bt, t1
     in
     let n, t1, subst = infer ctx e1 in
-    let ctx, bt = new_typevar {ctx with n} in
+    let ctx, bt = new_typevar { ctx with n } in
     let subst, ctx, bt, _ = List.fold_left loop (subst, ctx, bt, t1) cases in
     ctx.n, bt, subst
   | Empty ->
@@ -542,13 +548,25 @@ let rec infer ctx e =
     ctx.n, TList tvar, esubst
   | Cons (e1, e2) ->
     let n, t1, subst1 = infer ctx e1 in
-    let n, t2, subst2 = infer {ctx with n} e2 in
+    let n, t2, subst2 = infer { ctx with n } e2 in
     let t1 = subst_ty subst2 t1 in
     let subst = compose_subst subst2 subst1 in
     let subst' = unify [ t2, TList t1 ] in
     let subst = compose_subst subst' subst in
     let t2 = subst_ty subst' t2 in
     n, t2, subst
+  | Tuple es ->
+    let _, subst, { n; _ }, ts =
+      List.fold_left
+        (fun (subst_prev, subst_acc, ctx, ts) e ->
+          let ts = List.map (subst_ty subst_prev) ts in
+          let ctx = subst_tyenv subst_prev ctx in
+          let n, t, subst = infer ctx e in
+          subst, compose_subst subst subst_acc, { ctx with n }, t :: ts)
+        (esubst, esubst, ctx, [])
+        es
+    in
+    n, TTuple ts, subst
 
 and prefixop_infer ctx e1 expectedType retType =
   let n, t1, subst1 = infer ctx e1 in
@@ -557,7 +575,7 @@ and prefixop_infer ctx e1 expectedType retType =
 
 and binop_infer ctx e1 e2 cmp retType =
   let n, t1, subst1 = infer ctx e1 in
-  let ctx = subst_tyenv subst1 {ctx with n} in
+  let ctx = subst_tyenv subst1 { ctx with n } in
   let n, t2, subst2 = infer ctx e2 in
   let t1 = subst_ty subst2 t1 in
   let subst3 = unify (cmp (t1, t2)) in

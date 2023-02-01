@@ -20,6 +20,7 @@ type exp =
   | Empty (* [] *)
   | Unit (* () *)
   | Cons of exp * exp
+  | Tuple of exp list
   | FailWith of exp
 
 type value =
@@ -28,6 +29,7 @@ type value =
   | BoolVal of bool
   | StrVal of string
   | ListVal of value list
+  | TupleVal of value list
   | FunVal of string * exp * env
   | RecFunVal of string * string * exp * env
 
@@ -55,6 +57,7 @@ let exp_name = function
   | Empty -> "Empty"
   | Unit -> "Unit"
   | Cons _ -> "Cons"
+  | Tuple _ -> "Tuple"
   | FailWith _ -> "FailWith"
 ;;
 
@@ -64,6 +67,7 @@ let value_type = function
   | BoolVal _ -> "bool"
   | StrVal _ -> "str"
   | ListVal _ -> "list"
+  | TupleVal _ -> "tuple"
   | FunVal _ -> "fun"
   | RecFunVal _ -> "fun"
 ;;
@@ -87,6 +91,8 @@ let rec pprint_exp ppf e =
   | Div (e1, e2)
   | Cons (e1, e2) ->
     Fmt.pf ppf "@[<v 2>%s@ %a@ %a@]" ename pprint_exp e1 pprint_exp e2
+  | Tuple es ->
+    Fmt.pf ppf "@[<hov 2>%s@ %a@]" ename (Fmt.list ~sep:Fmt.comma pprint_exp) es
   | If (ce, e1, e2) ->
     Fmt.pf
       ppf
@@ -136,6 +142,12 @@ let rec pprint_value ppf = function
   | BoolVal b -> Fmt.pf ppf "BoolVal %b" b
   | StrVal s -> Fmt.pf ppf "StrVal %s" s
   | ListVal l -> Fmt.pf ppf "@[<v 2>ListVal@ %a@]" (Fmt.list pprint_value) l
+  | TupleVal l ->
+    Fmt.pf
+      ppf
+      "@[<hov 2>TupleVal@ %a@]"
+      (Fmt.list ~sep:Fmt.comma pprint_value)
+      l
   | FunVal (n, e, env) ->
     Fmt.pf ppf "@[<v 2>FunVal@ %s@ %a@ %a@]" n pprint_exp e pprint_env env
   | RecFunVal (n, x, e, env) ->
@@ -160,6 +172,12 @@ let pprint_value_simplified ppf = function
   | BoolVal b -> Fmt.pf ppf "BoolVal %b" b
   | StrVal s -> Fmt.pf ppf "StrVal %s" s
   | ListVal l -> Fmt.pf ppf "@[<v 2>ListVal@ %a@]" (Fmt.list pprint_value) l
+  | TupleVal l ->
+    Fmt.pf
+      ppf
+      "@[<hov 2>TupleVal@ %a@]"
+      (Fmt.list ~sep:Fmt.comma pprint_value)
+      l
   | FunVal (n, e, _) -> Fmt.pf ppf "@[<v 2>FunVal@ %s@ %a@]" n pprint_exp e
   | RecFunVal (n, x, e, _) ->
     Fmt.pf ppf "@[<v 2>RetFunVal@ %s@ %s@ %a@]" n x pprint_exp e

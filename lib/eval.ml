@@ -97,6 +97,15 @@ let rec eval e env k =
        ^ value_type v1
        ^ ", "
        ^ value_type v2)
+  | Tuple es ->
+    let rec loop es k =
+      match es with
+      | [] -> k []
+      | e :: es ->
+        eval e env @@ fun v ->
+        loop es @@ fun vs -> k (v :: vs)
+    in
+    loop es @@ fun vs -> k @@ TupleVal vs
   | FailWith e ->
     eval e env @@ fun v1 ->
     (match v1 with

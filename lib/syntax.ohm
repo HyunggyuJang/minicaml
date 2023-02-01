@@ -47,14 +47,16 @@ MiniCaml {
 
   Literals =
     | var
+    | Tuple
     | int
     | bool
     | string
     | Unit
     | EmptyList
     | List
-  
+
   List = lbra Exp (semicol Exp)* semicol? rbra
+  Tuple = Exp (comma Exp)+ comma?
 
   /// tokens
 
@@ -62,14 +64,14 @@ MiniCaml {
   var = ~keyword id
   int = minus? digit+
   bool = true | false
-  Unit = lparen rparen 
+  Unit = lparen rparen
   EmptyList = lbra rbra
   string = "\"" (regularchar | "\'")* "\""
 
   id = (letter | "_") ( alnum | "." | "_" | "'")*
 
   // op
-  
+
   prefixOp  = not
   infix0op  = equal | less | greater
   infix1opR = colcol
@@ -85,6 +87,7 @@ MiniCaml {
   greater  = ">"
   semicol  = ";"
   colcol   = "::"
+  comma    = ","
 
   // group
   lparen = "("
@@ -110,7 +113,7 @@ MiniCaml {
     | else
     | match
     | with
-    
+
   not   = "not"   ~id
   true  = "true"  ~id
   false = "false" ~id

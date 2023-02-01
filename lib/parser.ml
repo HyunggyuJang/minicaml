@@ -120,6 +120,7 @@ let equal = string "="
 let less = string "<"
 let greater = string ">"
 let semicol = string ";"
+let comma = string ","
 let colcol = string "::"
 
 (* op relation *)
@@ -317,6 +318,7 @@ and pattern_inner () = literalP ()
 
 and literalP () =
   let list = pure () >>= list in
+  (* let tuple = pure () >>= tuple in *)
   choice
     [ (fun v -> Var v) <$> var <?> "variable"
     ; (fun i -> IntLit i) <$> int <?> "number"
@@ -324,7 +326,7 @@ and literalP () =
     ; (fun s -> StrLit s) <$> stringLit <?> "string"
     ; unitP <?> "unit"
     ; empty_list <?> "[]"
-    ; list <?> "list"
+    ; list <?> "list" (* ; tuple <?> "tuple" *)
     ]
 
 and list () =
@@ -340,6 +342,13 @@ and list () =
     let es = e :: es in
     let r = List.fold_right (fun e acc -> Cons (e, acc)) es Empty in
     pure r
+
+and tuple () =
+  let exp = pure () >>= exp in
+  let* e = exp in
+  let* es = many1 (ows *> comma *> ows *> exp) in
+  let* _ = optional @@ (ows *> comma) in
+  pure @@ Tuple (e :: es)
 ;;
 
 (* grammer *)
